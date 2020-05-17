@@ -1,0 +1,15 @@
+<RCC>
+  <qresource prefix="/" >
+    <file>imgs/checkmark.png</file>
+    <file>imgs/icon.png</file>
+    <file>imgs/loading.gif</file>
+    <file>imgs/loading_inverted.gif</file>
+    <file>imgs\table/header_0.png</file>
+    <file>imgs\table/header_1.png</file>
+    <file>imgs\table/header_2.png</file>
+    <file>imgs\table/header_3.png</file>
+    <file>imgs\table/header_4.png</file>
+    <file>imgs\table/header_5.png</file>
+    <file>imgs\table/header_6.png</file>
+  </qresource>
+</RCC>

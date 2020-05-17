@@ -1,0 +1,1 @@
+pyinstaller --icon="icon.ico" --onedir --windowed --name="UniGet" main.py
