@@ -117,6 +117,16 @@ class UniProtGet(QMainWindow):
         # Refresh GUI
         app.processEvents()
 
+        # Save update times for each database
+        try:
+            self.update_times = [None] * 5
+            with open("data/imported/db_last_update.txt", "r") as file:
+                lines = file.readlines()
+                for _, line in enumerate(lines):
+                    self.update_times[_] = line
+        except:
+            self.update_times = [None] * 5
+
         # Databases
         self.path_db_df = "data/imported/db_df.pkl"
         if not os.path.exists(self.path_db_df):
@@ -124,6 +134,8 @@ class UniProtGet(QMainWindow):
             self.get_db_filters.progress.connect(self.get_db_progress)
             self.get_db_filters.done.connect(self.get_db_done)
             self.get_db_filters.start()
+
+            self.update_times[0] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S\n")
         else:
             self.db_df = pickle.load(open(self.path_db_df, "rb"))
             self.get_db_combo()
@@ -135,6 +147,8 @@ class UniProtGet(QMainWindow):
             self.get_species_filters.progress.connect(self.get_species_progress)
             self.get_species_filters.done.connect(self.get_species_done)
             self.get_species_filters.start()
+
+            self.update_times[1] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S\n")
         else:
             self.spec_df = pickle.load(open(self.path_spec_df, "rb"))
             self.get_spec_combo()
@@ -146,6 +160,8 @@ class UniProtGet(QMainWindow):
             self.get_families_filters.progress.connect(self.get_families_progress)
             self.get_families_filters.done.connect(self.get_families_done)
             self.get_families_filters.start()
+
+            self.update_times[2] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S\n")
         else:
             self.family_dict = pickle.load(open(self.path_family_dict, "rb"))
             self.get_family_combo()
@@ -157,6 +173,8 @@ class UniProtGet(QMainWindow):
             self.get_pathways_filters.progress.connect(self.get_pathways_progress)
             self.get_pathways_filters.done.connect(self.get_pathways_done)
             self.get_pathways_filters.start()
+
+            self.update_times[3] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S\n")
         else:
             self.pathway_dict = pickle.load(open(self.path_pathway_dict, "rb"))
             self.get_pathways_combo()
@@ -168,17 +186,14 @@ class UniProtGet(QMainWindow):
             self.get_subcell_filters.progress.connect(self.get_subcell_progress)
             self.get_subcell_filters.done.connect(self.get_subcell_done)
             self.get_subcell_filters.start()
+
+            self.update_times[4] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S\n")
         else:
             self.subcell_dict = pickle.load(open(self.path_subcell_dict, "rb"))
             self.get_subcell_combo()
-
-        # TODO: This needs to implemented so that it saves only when full updated is done
+        
         with open("data/imported/db_last_update.txt", "w") as file:
-            file.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-        self.combos = [self.db_combo, self.spec_combo, self.family_combo, self.pathway_combo, self.subcell_combo]
-        self.progressbars = [self.db_progressbar, self.spec_progressbar, self.family_progressbar,
-                             self.pathway_progressbar, self.subcell_progressbar]
+            file.writelines(self.update_times)
 
     def get_db_progress(self, progress):
         self.db_progressbar.setValue(progress)
@@ -624,11 +639,19 @@ class UniProtGet(QMainWindow):
         # TODO: this function crashes when called before self.get_data finished
         self.statusBar().showMessage("Updating databases", 5000)
 
-        with open("data/imported/db_last_update.txt") as file:
-            last_update = file.readline()
+        try:
+            self.combos = [self.db_combo, self.spec_combo, self.family_combo, self.pathway_combo, self.subcell_combo]
+            self.progressbars = [self.db_progressbar, self.spec_progressbar, self.family_progressbar,
+                                 self.pathway_progressbar, self.subcell_progressbar]
+        except:
+            QMessageBox.warning(self, "Warning", "Databases are still loading.\nWait for completion.")
+            return
 
+        msg_info = ["Databases", "Species", "Families", "Pathways", "Subcellular locations"]
         msg = QMessageBox.question(self, "Update databases",
-                                   "Last update: {}".format(last_update),
+                                   "<b>Last update</b>:<br><br>{}".format(
+                                       "<br>".join(
+                                           [msg_info[_] + ":\t" + self.update_times[_] for _ in range(len(msg_info))])),
                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if msg == QMessageBox.Yes:
