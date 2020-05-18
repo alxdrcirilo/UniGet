@@ -100,7 +100,7 @@ class UniProtGet(QMainWindow):
         self.layout.addWidget(self.table, 0, 4, 4, 1)
         frame = QFrame()
         # TODO
-        # frame.setFrameStyle(1)
+        frame.setFrameStyle(1)
         # frame.setStyleSheet("border:1px solid black")
         frame.setLayout(self.layout)
         self.setCentralWidget(frame)
@@ -191,7 +191,7 @@ class UniProtGet(QMainWindow):
         else:
             self.subcell_dict = pickle.load(open(self.path_subcell_dict, "rb"))
             self.get_subcell_combo()
-        
+
         with open("data/imported/db_last_update.txt", "w") as file:
             file.writelines(self.update_times)
 
@@ -290,6 +290,9 @@ class UniProtGet(QMainWindow):
     def set_extra_menu(self):
         menu = QMenu(self)
 
+        self.open_action = QAction("Open", self)
+        self.save_action = QAction("Save", self)
+
         edit_menu = QMenu("Edit", self)
         self.select_all_action = QAction("Select all", self)
         edit_menu.addAction(self.select_all_action)
@@ -305,16 +308,22 @@ class UniProtGet(QMainWindow):
         self.update_db_action.setShortcut("Ctrl+U")
         self.update_db_action.triggered.connect(self.toolbutton_click)
 
+        menu.addAction(self.open_action)
+        menu.addAction(self.save_action)
         menu.addMenu(edit_menu)
         menu.addAction(self.filters_action)
         menu.addMenu(settings_menu)
         menu.addSeparator()
         menu.addAction(self.about_action)
 
+        self.open_action.triggered.connect(self.toolbutton_click)
+        self.open_action.setShortcut("Ctrl+O")
+        self.save_action.triggered.connect(self.toolbutton_click)
+        self.save_action.setShortcut("Ctrl+S")
         self.select_all_action.triggered.connect(self.toolbutton_click)
         self.select_all_action.setShortcut("Ctrl+A")
         self.open_downloads_action.triggered.connect(self.toolbutton_click)
-        self.open_downloads_action.setShortcut("Ctrl+O")
+        self.open_downloads_action.setShortcut("Ctrl+D")
         self.filters_action.triggered.connect(self.toolbutton_click)
         self.filters_action.setShortcut("Ctrl+F")
         self.about_action.triggered.connect(self.toolbutton_click)
@@ -323,6 +332,25 @@ class UniProtGet(QMainWindow):
         self.toolbutton.setMenu(menu)
 
     def toolbutton_click(self):
+        if self.sender() is self.open_action:
+            try:
+                name = QFileDialog.getOpenFileName(self, "Open file", filter="csv(*.csv)")
+                self.df = pd.read_csv(name[0], index_col=0)
+                row_count = self.df.shape[0]
+                self.update_table((self.df, row_count))
+                QMessageBox.information(self, "Info", "File successfully imported!")
+            except:
+                QMessageBox.warning(self, "Warning", "Unable to import data!")
+
+        if self.sender() is self.save_action:
+            try:
+                self.df
+                name = QFileDialog.getSaveFileName(self, "Save file", filter="csv(*.csv)")
+                self.df.to_csv(name[0])
+                QMessageBox.information(self, "Info", "Filed successfully saved!")
+            except:
+                QMessageBox.warning(self, "Warning", "Unable to save data!")
+
         if self.sender() is self.select_all_action:
             for row in range(self.row_count):
                 index = self.table.model().index(row, 0)
@@ -550,15 +578,12 @@ class UniProtGet(QMainWindow):
         self.gen_table.error.connect(self.error_table)
         self.gen_table.start()
 
-    def update_gene_filters(self, data):
-        print(data)
-
     def update_table(self, data):
         self.statusBar().clearMessage()
-        df, self.row_count = data
+        self.df, self.row_count = data
         self.statusbar_record_count.setText("{} records".format(self.row_count))
 
-        model = PandasModel(df)
+        model = PandasModel(self.df)
         self.proxy = QSortFilterProxyModel(self)
         self.proxy.setSourceModel(model)
         # Filter review status of record
@@ -586,8 +611,12 @@ class UniProtGet(QMainWindow):
         self.groupbox_base_filters.setEnabled(True)
         self.groupbox_experimental_filters.setEnabled(True)
         self.groupbox_gene_filters.setEnabled(True)
-        self.loading_gif.stop()
-        self.loading_label.hide()
+        try:
+            # When importing from file, this should not be calledF
+            self.loading_gif.stop()
+            self.loading_label.hide()
+        except:
+            pass
 
         app.processEvents()
         time.sleep(1)

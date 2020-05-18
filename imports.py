@@ -10,12 +10,13 @@ from data.pandas_model import PandasModel
 
 from PyQt5.QtCore import QRegExp, QSize, QSortFilterProxyModel, Qt
 from PyQt5.QtGui import QIcon, QMovie, QPixmap
-from PyQt5.QtWidgets import QApplication, QAction, QCheckBox, QComboBox, QDesktopWidget, QErrorMessage, QFrame, \
+from PyQt5.QtWidgets import QApplication, QAction, QCheckBox, QComboBox, QDesktopWidget, QErrorMessage, QFileDialog, QFrame, \
     QGridLayout, QGroupBox, QHeaderView, QLabel, QLineEdit, QMainWindow, QMenu, QMessageBox, QPushButton, QProgressBar, QSpinBox, \
     QTableView, QToolButton, QWidget
 
 import datetime
 import os
+import pandas as pd
 import pickle
 import sys
 import time
